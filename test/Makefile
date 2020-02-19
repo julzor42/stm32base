@@ -1,7 +1,5 @@
 # project
-BINARY  = firmware
 BOARD   = stm32f429i-disc1
-OBJS    = firmware.o
 EXTPATH = ../ext
 
 # includes

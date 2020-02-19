@@ -26,6 +26,12 @@ OOCD_INTERFACE ?= stlink-v2
 OOCD_TARGET ?= stlink
 DEBUGPORT ?= 4444
 
+# Project default configuration
+SRC    ?= $(wildcard src/*.c)
+OBJS   ?= $(patsubst %.c,%.o,$(SRC))
+CFLAGS ?=-I./inc
+BINARY ?= firmware
+
 # Board profile
 EXTPATH ?= ext
 CM3BASE ?= $(EXTPATH)/opencm3
