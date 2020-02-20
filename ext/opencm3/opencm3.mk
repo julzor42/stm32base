@@ -24,7 +24,9 @@
 OPENCM3_DIR ?= /opt/libopencm3
 OOCD_INTERFACE ?= stlink-v2
 OOCD_TARGET ?= stlink
-DEBUGPORT ?= 4444
+DEBUGPORT ?= 4242
+DEBUGIP ?= 
+DEBUGTARGET ?= extended-remote $(DEBUGIP):$(DEBUGPORT)
 
 # Project default configuration
 SRC    ?= $(wildcard src/*.c)
@@ -295,4 +297,4 @@ endif
 re: clean all
 
 debug:
-	gdb -quiet $(BINARY).elf -ex "target extended-remote :$(DEBUGPORT)" -ex="set confirm off" -ex load #-ex continue
+	gdb -quiet $(BINARY).elf -ex "target $(DEBUGTARGET)" -ex="set confirm off" -ex load #-ex continue
