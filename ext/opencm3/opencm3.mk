@@ -34,6 +34,10 @@ OBJS   ?= $(patsubst %.c,%.o,$(SRC))
 CFLAGS ?=-I./inc
 BINARY ?= firmware
 
+# Board specific source files
+SRC    += $(wildcard $(BOARD_PATH)/src/*.c)
+CFLAGS +=-I$(BOARD_PATH)/inc
+
 # Board profile
 EXTPATH ?= ext
 CM3BASE ?= $(EXTPATH)/opencm3
