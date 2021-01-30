@@ -1,7 +1,5 @@
 # Default values
 OPENCM3_DIR 	?= /opt/libopencm3
-OOCD_INTERFACE 	?= stlink
-OOCD_TARGET 	?= stm32f1x
 DEBUGPORT 		?= 4242
 DEBUGIP 		?= 
 DEBUGTARGET 	?= extended-remote $(DEBUGIP):$(DEBUGPORT)
@@ -33,11 +31,4 @@ re: clean all
 
 debug:
 	gdb -quiet $(PROJECT).elf -ex "target $(DEBUGTARGET)" -ex="set confirm off" -ex load #-ex continue
-
-program: $(PROJECT).elf
-	@printf "  FLASH\t$<\n"
-	$(Q)(echo "halt; program $(realpath $(*).elf) verify reset" | nc -4 localhost 4444 2>/dev/null) || \
-		$(OOCD) -f interface/$(OOCD_INTERFACE).cfg \
-		-f target/$(OOCD_TARGET).cfg \
-		-c "program $(realpath $(*).elf) verify reset exit" \
-		$(NULL)
+	
