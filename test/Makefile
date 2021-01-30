@@ -1,5 +1,5 @@
 # project
-BOARD   = stm32f429i-disc1
+BOARD   = bluepill
 EXTPATH = ext
 
 # includes
