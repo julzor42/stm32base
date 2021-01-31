@@ -1,28 +1,18 @@
-#include <libopencm3/stm32/rcc.h>
-#include <libopencm3/stm32/gpio.h>
 #include <bluepill.h>
 
-void delay(void);
-
-void delay(void)
+int main()
 {
-	int i;
+    bluepill_board_setup();
+    bluepill_clock_enable();
 
-	for (i = 0; i < 800000; i++)
-		__asm__("nop");
-}
+    while (1)
+    {
+        bluepill_led_on();
+        bluepill_delay(50);
 
-int main(void)
-{
-	bluepill_setup();
+        bluepill_led_off();
+        bluepill_delay(1000);
+    }
 
-	bluepill_led_off();
-
-	while (1)
-	{
-		bluepill_led_toggle();
-		delay();
-	}
-
-	return 0;
+    return 0;
 }

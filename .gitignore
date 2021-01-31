@@ -1,2 +1,6 @@
 *.d
 *.o
+test/**/*.ld
+
+*.bin
+*.elf
