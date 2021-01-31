@@ -27,36 +27,11 @@
 #include <libopencm3/stm32/gpio.h>
 #include <libopencm3/stm32/usart.h>
 #include <libopencm3/cm3/systick.h>
-#include "clock.h"
-#include "sdram.h"
-#include "lcd.h"
+#include <stm32f429i-disc1.h>
 
 /* utility functions */
-void uart_putc(char c);
-int _write(int fd, char *ptr, int len);
 
 void mandel(float, float, float);
-
-static void gpio_setup(void)
-{
-	/* Setup GPIO pin GPIO13 on GPIO port G for LED. */
-	rcc_periph_clock_enable(RCC_GPIOG);
-	gpio_mode_setup(GPIOG, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO13);
-
-	/* Setup GPIO A pins for the USART1 function */
-	rcc_periph_clock_enable(RCC_GPIOA);
-	rcc_periph_clock_enable(RCC_USART1);
-	gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO9 | GPIO10);
-	gpio_set_af(GPIOA, GPIO_AF7, GPIO9 | GPIO10);
-
-	usart_set_baudrate(USART1, 115200);
-	usart_set_databits(USART1, 8);
-	usart_set_stopbits(USART1, USART_STOPBITS_1);
-	usart_set_mode(USART1, USART_MODE_TX_RX);
-	usart_set_parity(USART1, USART_PARITY_NONE);
-	usart_set_flow_control(USART1, USART_FLOWCONTROL_NONE);
-	usart_enable(USART1);
-}
 
 /* Maximum number of iterations for the escape-time calculation */
 #define max_iter 32
@@ -98,9 +73,7 @@ uint16_t lcd_colors[] = {
 	0,
 	0,
 	0,
-	0
-};
-
+	0};
 
 static int iterate(float, float);
 /* Main mandelbrot calculation */
@@ -108,14 +81,16 @@ static int iterate(float px, float py)
 {
 	int it = 0;
 	float x = 0, y = 0;
-	while (it < max_iter) {
-		float nx = x*x;
-		float ny = y*y;
-		if ((nx + ny) > 4) {
+	while (it < max_iter)
+	{
+		float nx = x * x;
+		float ny = y * y;
+		if ((nx + ny) > 4)
+		{
 			return it;
 		}
 		/* Zn+1 = Zn^2 + P */
-		y = 2*x*y + py;
+		y = 2 * x * y + py;
 		x = nx - ny + px;
 		it++;
 	}
@@ -126,15 +101,20 @@ void mandel(float cx, float cy, float scale)
 {
 	int x, y;
 	int change = 0;
-	for (x = -120; x < 120; x++) {
-		for (y = -160; y < 160; y++) {
-			int i = iterate(cx + x*scale, cy + y*scale);
-			if (i >= max_iter) {
+	for (x = -120; x < 120; x++)
+	{
+		for (y = -160; y < 160; y++)
+		{
+			int i = iterate(cx + x * scale, cy + y * scale);
+			if (i >= max_iter)
+			{
 				i = max_iter;
-			} else {
+			}
+			else
+			{
 				change++;
 			}
-			lcd_draw_pixel(x+120, y+160, lcd_colors[i]);
+			lcd_draw_pixel(x + 120, y + 160, lcd_colors[i]);
 		}
 	}
 }
@@ -144,11 +124,12 @@ int main(void)
 	int gen = 0;
 	float scale = 0.25f, center_x = -0.5f, center_y = 0.0f;
 
+	system_board_setup();
 
 	/* Clock setup */
-	clock_setup();
-	/* USART and GPIO setup */
-	gpio_setup();
+	system_clock_enable();
+	system_usart_init();
+
 	/* Enable the SDRAM attached to the board */
 	sdram_init();
 	/* Enable the LCD attached to the board */
@@ -156,17 +137,18 @@ int main(void)
 
 	printf("System initialized.\n");
 
-	while (1) {
-		/* Blink the LED (PG13) on the board with each fractal drawn. */
-		gpio_toggle(GPIOG, GPIO13);		/* LED on/off */
-		mandel(center_x, center_y, scale);	/* draw mandelbrot */
-		lcd_show_frame();			/* show it */
+	while (1)
+	{
+		system_led1_toggle();
+		mandel(center_x, center_y, scale);
+		lcd_show_frame();				  
 		/* Change scale and center */
 		center_x += 0.1815f * scale;
 		center_y += 0.505f * scale;
-		scale	*= 0.875f;
+		scale *= 0.875f;
 		gen++;
-		if (gen > 99) {
+		if (gen > 99)
+		{
 			scale = 0.25f;
 			center_x = -0.5f;
 			center_y = 0.0f;
@@ -181,47 +163,3 @@ int main(void)
 
 	return 0;
 }
-
-/*
- * uart_putc
- *
- * This pushes a character into the transmit buffer for
- * the channel and turns on TX interrupts (which will fire
- * because initially the register will be empty.) If the
- * ISR sends out the last character it turns off the transmit
- * interrupt flag, so that it won't keep firing on an empty
- * transmit buffer.
- */
-void
-uart_putc(char c) {
-
-	while ((USART_SR(USART1) & USART_SR_TXE) == 0);
-	USART_DR(USART1) = c;
-}
-
-/*
- * Called by libc stdio functions
- */
-int
-_write(int fd, char *ptr, int len)
-{
-	int i = 0;
-
-	/*
-	 * Write "len" of char from "ptr" to file id "fd"
-	 * Return number of char written.
-	 */
-	if (fd > 2) {
-		return -1;  /* STDOUT, STDIN, STDERR */
-	}
-	while (*ptr && (i < len)) {
-		uart_putc(*ptr);
-		if (*ptr == '\n') {
-			uart_putc('\r');
-		}
-		i++;
-		ptr++;
-	}
-	return i;
-}
-
